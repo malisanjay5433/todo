@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../utils/dialog_box.dart';
 import '../utils/todo_tile.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
-
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
+  final _controller = TextEditingController();
   List todoList = [
     ['Flutter', false],
     ['iOS', false]
@@ -21,6 +22,29 @@ class _HomeState extends State<Home> {
     });
   }
 
+  void saveTask() {
+    setState(() {
+      todoList.add([_controller.text, false]);
+      _controller.clear();
+    });
+  }
+
+  void dimiss() {
+    Navigator.of(context).pop();
+  }
+
+  void createNewTask() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return DialogBox(
+            controller: _controller,
+            onSave: saveTask,
+            onCancel: dimiss,
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,6 +52,10 @@ class _HomeState extends State<Home> {
         appBar: AppBar(
           title: const Text('TO DO'),
           elevation: 0,
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: createNewTask,
+          child: const Icon(Icons.add),
         ),
         body: ListView.builder(
           itemCount: todoList.length,

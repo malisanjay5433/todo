@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:hive/hive.dart';
+import '../data/database.dart';
 import '../utils/dialog_box.dart';
 import '../utils/todo_tile.dart';
 
@@ -11,26 +12,43 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final _controller = TextEditingController();
-  List todoList = [
-    ['Flutter', false],
-    ['iOS', false]
-  ];
-
+  TodoDatabase db = TodoDatabase();
+  final _myBox = Hive.box('TODO');
   void checkState(bool? value, int index) {
     setState(() {
-      todoList[index][1] = !todoList[index][1];
+      db.todoList[index][1] = !db.todoList[index][1];
     });
+    db.updateDatabase();
   }
 
   void saveTask() {
     setState(() {
-      todoList.add([_controller.text, false]);
+      db.todoList.add([_controller.text, false]);
       _controller.clear();
     });
+    db.updateDatabase();
+  }
+
+  void deleteTask(int index) {
+    setState(() {
+      db.todoList.removeAt(index);
+    });
+    db.updateDatabase();
   }
 
   void dimiss() {
     Navigator.of(context).pop();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    if (_myBox.get('TODO') == null) {
+      db.createInitialData();
+    } else {
+      db.loadDatabase();
+    }
+    super.initState();
   }
 
   void createNewTask() {
@@ -58,12 +76,13 @@ class _HomeState extends State<Home> {
           child: const Icon(Icons.add),
         ),
         body: ListView.builder(
-          itemCount: todoList.length,
+          itemCount: db.todoList.length,
           itemBuilder: (context, index) {
             return ToDoTile(
-                taskName: todoList[index][0],
-                isTaskCompleted: todoList[index][1],
-                onchanged: (value) => checkState(value, index));
+                taskName: db.todoList[index][0],
+                isTaskCompleted: db.todoList[index][1],
+                onchanged: (value) => checkState(value, index),
+                deleteFunction: (context) => deleteTask(index));
           },
         ));
   }
